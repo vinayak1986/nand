@@ -48,7 +48,8 @@ CHIP CPU {
 	Or(a = instruction[0], b = instruction[1], out = tmp);
 	Or(a = instruction[2], b = tmp, out = tmp1);
 	Or(a = zero, b = negative, out = tmp2);
-	And(a = tmp1, b = tmp2, out = isjump);
+	And(a = tmp1, b = tmp2, out = tmp3);
+	And(a = tmp3, b = instruction[15], out = isjump);
 	Not(in = isjump, out = isincrement);
 	PC(in = aout, load = isjump, inc = isincrement, reset = reset, out[0..14] = pc);
 	And(a = instruction[15], b = instruction[3], out = writeM);
