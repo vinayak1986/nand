@@ -41,15 +41,23 @@ CHIP CPU {
     PARTS:
     // Put your code here:
 	Mux16(a = instruction, b = aluouta, sel = instruction[15], out = ain);
-	ARegister(in = ain, load = instruction[5], out = aout, out[0..14] = addressM);
+    Not(in = instruction[15], out = notopcode);
+    Or(a = notopcode, b = instruction[5], out = loada);
+	ARegister(in = ain, load = loada, out = aout, out[0..14] = addressM);
 	Mux16(a = aout, b = inM, sel = instruction[12], out = amout);
-	DRegister(in = aluoutd, load = instruction[4], out = dout);
+    And(a = instruction[15], b = instruction[4], out = loadd);
+	DRegister(in = aluoutd, load = loadd, out = dout);
 	ALU(x = dout, y = amout,  zx = instruction[11], nx = instruction[10], zy = instruction[9], ny = instruction[8], f = instruction[7], no = instruction[6], out = aluouta, out = aluoutd, out = outM, zr = zero, ng = negative);
-	Or(a = instruction[0], b = instruction[1], out = tmp);
-	Or(a = instruction[2], b = tmp, out = tmp1);
-	Or(a = zero, b = negative, out = tmp2);
-	And(a = tmp1, b = tmp2, out = tmp3);
-	And(a = tmp3, b = instruction[15], out = isjump);
+    Not(in = zero, out = nonzero);
+    And(a = nonzero, b = instruction[0], out = gtjump);
+    And(a = zero, b = instruction[1], out = eqjump);
+    And(a = negative, b = instruction[2], out = ltjump);
+    And(a = instruction[0], b = instruction[1], out = uncondjmp1);
+    And(a = uncondjmp1, b = instruction[2], out = uncondjmp);
+    Or(a = gtjump, b = eqjump, out = jump1);
+    Or(a = jump1, b = ltjump, out = jump2);
+    Or(a = jump2, b = uncondjmp, out = jump3);
+    And(a = jump3, b = instruction[15], out = isjump);
 	Not(in = isjump, out = isincrement);
 	PC(in = aout, load = isjump, inc = isincrement, reset = reset, out[0..14] = pc);
 	And(a = instruction[15], b = instruction[3], out = writeM);
